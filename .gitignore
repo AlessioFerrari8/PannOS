@@ -1,2 +1,9 @@
 docs/refs/
 docs/notes/
+docs/devlogs/
+
+# build artifacts
+isodir/
+pannos.bin
+pannos.iso
+kernel/*.o
