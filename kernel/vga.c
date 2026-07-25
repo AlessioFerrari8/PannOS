@@ -1,6 +1,10 @@
 #include <stdint.h>
 #include "vga.h"
 
+// dichiarazioni delle funzioni, così vengono trovate subito
+static void new_line(void);
+static void vga_scroll(void);
+
 // forzo a costanti, non devono essere cambiati
 static const int height = 25;
 static const int width = 80;
@@ -34,8 +38,10 @@ static uint16_t compose_cell(unsigned char c, uint8_t atr) {
 }
 
 /**
- * @brief 
- * 
+ * @brief Inizializza il terminale: colore bianco su nero, cursore a (0,0)
+ *        schermo ripulito. Va chiamata prima di qualsiasi altra vga_*.
+ *
+ * Per cancellare l'unico modo è riscrivere ogni cella
  */
 void vga_init(void) {
     // current color, bianco su nero
@@ -50,34 +56,32 @@ void vga_init(void) {
 }
 
 /**
- * @brief 
- * 
- * @param c 
+ * @brief Stampa un carattere alla posizione corrente e avanza il cursore
+ * @param c carattere da stampare; '\n' manda a capo senza stampare nulla
+ *
+ * A fine riga va a capo da sola, a fine schermo fa scrollare. L'unica sequenza
+ * di escape gestita è \n
  */
 void vga_putchar(unsigned char c) {
     // caso speciale
     if (c == '\n') {
-        current_col = 0;
-        current_row++;
+        new_line();
         return;
     } 
-
+    
     // caso normale
     buffer[current_row * width + current_col] = compose_cell(c, current_color);
     current_col++;
     
     // se la colonna arriva alla fine
     if (current_col == width) {
-        current_col = 0;
-        // incremento la riga
-        current_row++;
+        new_line();
     }
 }
 
 /**
- * @brief 
- * 
- * @param s 
+ * @brief Stampa una stringa carattere per carattere
+ * @param s stringa terminata da \0; il terminatore non viene stampato
  */
 void vga_write(const char* s) {
     // indice
@@ -89,3 +93,40 @@ void vga_write(const char* s) {
         i++;
     }
 }
+
+/**
+ * @brief Fa scorrere lo schermo di una riga verso l'alto
+ *
+ * Il contenuto della riga 0 va perso definitivamente
+ * L'ultima riga viene ripulita e il cursore resta su di essa
+ */
+static void vga_scroll(void) {
+    // copia
+    for(int r = 1; r < height; r++) { // parto da 1, per evitare -1
+        for(int c = 0; c < width; c++) {
+            buffer[(r-1) * width + c] = buffer[r * width + c];
+        }
+    }
+
+    // pulizia ultima riga
+    for(int c = 0; c < width; c++) {
+        buffer[(height - 1) * width + c] = compose_cell(' ', current_color);
+    }
+
+    // cursore
+    current_row = height - 1;
+}
+
+/**
+ * @brief Porta il cursore all'inizio della riga successiva, scrollando se
+ *        si era già sull'ultima riga
+ */
+static void new_line(void) {
+    current_col = 0;
+    current_row++;
+    // se la colonna arriva alla fine
+    if (current_row == height) {
+        vga_scroll();
+    }
+}
+

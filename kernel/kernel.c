@@ -3,5 +3,8 @@
 
 void kernel_main(void) {
     vga_init();
-    vga_write("Hi, my name is Alessio, and I'm a C dev \n");
+    for (int i = 0; i < 30; i++) {
+        vga_putchar('A' + i);
+        vga_write(" riga\n");
+    }
 }
