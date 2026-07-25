@@ -1,9 +1,7 @@
 #include <stdint.h>
-
-unsigned char h = 'F';
+#include "vga.h"
 
 void kernel_main(void) {
-    unsigned char* p = (unsigned char*) 0xB8000;
-    p[0] = h;
-    p[1] = 0x0F;
+    vga_init();
+    vga_write("Hi, my name is Alessio, and I'm a C dev \n");
 }
