@@ -2,13 +2,14 @@
 ENTRY(_start)
 
 SECTIONS {
-    /* inizio posizione 0x100000 */
+    /* inizio a 0x100000, sotto il mega c'è roba di bios e hardware legacy */
     . = 1M;
 
     /* sezione text, codice eseguibile */
     .text : {
-        /* prendi la sezione .text da tutti i file oggetto che il linker sta combinando */
+        /* .multiboot va per prima, grub cerca l'header solo nei primi 32 kb */
         *(.multiboot)
+        /* prende la .text da tutti i file oggetto che il linker sta combinando */
         *(.text)
     }
 

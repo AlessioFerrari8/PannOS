@@ -20,9 +20,9 @@ multiboot_end:
 
 ; stack (inverto top e bottom essendo una struttura che cresce verso il basso)
 section .bss
-align 16
+align 16 ; l'abi x86 vuole lo stack allineato a 16 byte alle chiamate
 stack_bottom:
-resb 16384 ; 16 kb
+resb 16384 ; 16 kb, abbondanti finché non ci sono interrupt annidati
 stack_top:
 
 ; _start

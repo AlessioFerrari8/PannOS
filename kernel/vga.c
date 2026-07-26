@@ -13,6 +13,9 @@ static int current_col = 0;
 static int current_color;
 
 
+// 0xB8000 è il buffer video in text mode, mappato dalla scheda
+// volatile perché non è ram normale: senza, il compilatore ottimizzerebbe via
+// le scritture che non rilegge mai
 static volatile uint16_t* buffer = (volatile uint16_t*) 0xB8000;
 
 // helper
@@ -46,7 +49,6 @@ static uint16_t compose_cell(unsigned char c, uint8_t atr) {
 void vga_init(void) {
     // current color, bianco su nero
     current_color = compose_color(15, 0);
-    // azzero current_row e current_col
     current_row = current_col = 0;
     for(int r = 0; r < height; r++) {
         for(int c = 0; c < width; c++) {
@@ -84,7 +86,6 @@ void vga_putchar(unsigned char c) {
  * @param s stringa terminata da \0; il terminatore non viene stampato
  */
 void vga_write(const char* s) {
-    // indice
     int i = 0;
 
     // fino a quando non arriviamo alla fine della stringa
@@ -101,7 +102,7 @@ void vga_write(const char* s) {
  * L'ultima riga viene ripulita e il cursore resta su di essa
  */
 static void vga_scroll(void) {
-    // copia
+    // sposto ogni riga su quella sopra, la riga 0 va persa
     for(int r = 1; r < height; r++) { // parto da 1, per evitare -1
         for(int c = 0; c < width; c++) {
             buffer[(r-1) * width + c] = buffer[r * width + c];
@@ -113,7 +114,7 @@ static void vga_scroll(void) {
         buffer[(height - 1) * width + c] = compose_cell(' ', current_color);
     }
 
-    // cursore
+    // il cursore resta sull'ultima riga, quella appena liberata
     current_row = height - 1;
 }
 
@@ -124,7 +125,7 @@ static void vga_scroll(void) {
 static void new_line(void) {
     current_col = 0;
     current_row++;
-    // se la colonna arriva alla fine
+    // se ero sull'ultima riga devo far scorrere
     if (current_row == height) {
         vga_scroll();
     }
