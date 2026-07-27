@@ -10,7 +10,10 @@ kernel/boot.o: kernel/boot.s
 kernel/gdt_flush.o: kernel/gdt_flush.s
 	nasm -f elf32 kernel/gdt_flush.s -o kernel/gdt_flush.o
 
-kernel/kernel.o: kernel/kernel.c kernel/vga.h kernel/gdt.h
+kernel/idt_flush.o: kernel/idt_flush.s
+	nasm -f elf32 kernel/idt_flush.s -o kernel/idt_flush.o
+
+kernel/kernel.o: kernel/kernel.c kernel/vga.h kernel/gdt.h kernel/idt.h
 	$(CC) $(CFLAGS) -c kernel/kernel.c -o kernel/kernel.o
 
 kernel/vga.o: kernel/vga.c kernel/vga.h
@@ -19,8 +22,15 @@ kernel/vga.o: kernel/vga.c kernel/vga.h
 kernel/gdt.o: kernel/gdt.c kernel/gdt.h
 	$(CC) $(CFLAGS) -c kernel/gdt.c -o kernel/gdt.o
 
-pannos.bin: kernel/boot.o kernel/kernel.o kernel/vga.o kernel/gdt.o kernel/gdt_flush.o kernel/linker.ld
-	$(CC) -T kernel/linker.ld -o pannos.bin $(LDFLAGS) kernel/boot.o kernel/kernel.o kernel/vga.o kernel/gdt.o kernel/gdt_flush.o -lgcc
+kernel/idt.o: kernel/idt.c kernel/idt.h
+	$(CC) $(CFLAGS) -c kernel/idt.c -o kernel/idt.o
+
+OBJS = kernel/boot.o kernel/kernel.o kernel/vga.o \
+       kernel/gdt.o kernel/gdt_flush.o \
+       kernel/idt.o kernel/idt_flush.o
+
+pannos.bin: $(OBJS) kernel/linker.ld
+	$(CC) -T kernel/linker.ld -o pannos.bin $(LDFLAGS) $(OBJS) -lgcc
 
 pannos.iso: pannos.bin grub.cfg
 	mkdir -p isodir/boot/grub
