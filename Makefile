@@ -13,8 +13,11 @@ kernel/gdt_flush.o: kernel/gdt_flush.s
 kernel/idt_flush.o: kernel/idt_flush.s
 	nasm -f elf32 kernel/idt_flush.s -o kernel/idt_flush.o
 
-kernel/isr.o: kernel/isr.s
-	nasm -f elf32 kernel/isr.s -o kernel/isr.o
+kernel/isr_stubs.o: kernel/isr_stubs.s
+	nasm -f elf32 kernel/isr_stubs.s -o kernel/isr_stubs.o
+
+kernel/isr.o: kernel/isr.c kernel/isr.h kernel/vga.h
+	$(CC) $(CFLAGS) -c kernel/isr.c -o kernel/isr.o
 
 kernel/kernel.o: kernel/kernel.c kernel/vga.h kernel/gdt.h kernel/idt.h
 	$(CC) $(CFLAGS) -c kernel/kernel.c -o kernel/kernel.o
@@ -30,7 +33,8 @@ kernel/idt.o: kernel/idt.c kernel/idt.h
 
 OBJS = kernel/boot.o kernel/kernel.o kernel/vga.o \
        kernel/gdt.o kernel/gdt_flush.o \
-       kernel/idt.o kernel/idt_flush.o kernel/isr.o
+       kernel/idt.o kernel/idt_flush.o \
+       kernel/isr.o kernel/isr_stubs.o
 
 pannos.bin: $(OBJS) kernel/linker.ld
 	$(CC) -T kernel/linker.ld -o pannos.bin $(LDFLAGS) $(OBJS) -lgcc

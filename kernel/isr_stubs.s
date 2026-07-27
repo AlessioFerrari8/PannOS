@@ -4,6 +4,7 @@
 ; lo cabla lo stub e poi confluiscono tutti in isr_common_stub
 
 section .text
+extern isr_handler
 
 ; eccezioni che non pushano l'error code
 ; lo zero finto non serve a niente se non a occupare lo spazio
@@ -62,10 +63,35 @@ ISR_NOERRCODE 31
 
 
 
-; punto di arrivo comune, per ora non fa niente e torna indietro
+; punto di arrivo comune
 isr_common_stub:
-    add esp, 8
+    ; pusha eax, ecx, edx, ebx, esp, ebp, esi, edi
+    pusha
+    ; salva ds, passando per eax 
+    mov ax, ds
+    push eax
+    ; carica 0x10 in ds, es, fs, gs
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
 
+    push esp
+
+    call isr_handler
+
+    add esp, 4
+    ; rimetto i valori in ds, es, fs, gs
+    pop eax
+    mov ds, eax
+    mov es, eax
+    mov fs, eax
+    mov gs, eax
+    ; inverso di pusha
+    popa
+
+    add esp, 8
     ; ret non basterebbe, non ripristina né cs né eflags
     ; e senza eflags if resterebbe spento per sempre
     iret
