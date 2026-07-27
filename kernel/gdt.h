@@ -24,6 +24,10 @@ struct gdt_ptr {
     uint32_t base;
 }__attribute__((packed));
 
+_Static_assert(sizeof(struct gdt_entry) == 8, "gdt_entry must be 8 bytes");
+_Static_assert(sizeof(struct gdt_ptr) == 6, "gdt_ptr must be 6 bytes");
+
+
 void gdt_init(void);
 void gdt_flush(uint32_t);
 
