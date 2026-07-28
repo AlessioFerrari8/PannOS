@@ -20,6 +20,7 @@ struct registers {
 };
 
 void isr_handler(struct registers *regs);
+void irq_handler(struct registers *regs);
 
 _Static_assert(sizeof(struct registers) == 56, "registers must be 56 bytes");
 

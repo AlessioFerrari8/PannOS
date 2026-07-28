@@ -56,12 +56,35 @@ void isr29(void);
 void isr30(void);
 void isr31(void);
 
+// irq
+void irq0(void);
+void irq1(void);
+void irq2(void);
+void irq3(void);
+void irq4(void);
+void irq5(void);
+void irq6(void);
+void irq7(void);
+void irq8(void);
+void irq9(void);
+void irq10(void);
+void irq11(void);
+void irq12(void);
+void irq13(void);
+void irq14(void);
+void irq15(void);
+
 // indirizzi dei 32 stub, l'indice coincide col numero del vettore
 static void (*const isr_stubs[32])(void) = {
     isr0,  isr1,  isr2,  isr3,  isr4,  isr5,  isr6,  isr7,
     isr8,  isr9,  isr10, isr11, isr12, isr13, isr14, isr15,
     isr16, isr17, isr18, isr19, isr20, isr21, isr22, isr23,
     isr24, isr25, isr26, isr27, isr28, isr29, isr30, isr31
+};
+
+static void (*const irq_stubs[16])(void) = {
+    irq0, irq1, irq2, irq3, irq4, irq5, irq6, irq7, irq8,
+    irq9, irq10, irq11, irq12, irq13, irq14, irq15
 };
 
 
@@ -79,6 +102,11 @@ void idt_init(void) {
     // registro i 32 stub nelle prime 32 entry, sovrascrivendo gli zeri
     for(int i = 0; i < 32; i++) {
         idt_set_entry(i, (uint32_t)isr_stubs[i], 0x08, 0x8E);
+    }
+
+    // registro i 16 stub
+    for (int i = 0; i < 16; i++) {
+        idt_set_entry(32 + i, (uint32_t)irq_stubs[i], 0x08, 0x8E);
     }
 
     idt_flush((uint32_t)&idtp);

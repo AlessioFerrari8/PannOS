@@ -5,6 +5,7 @@
 
 section .text
 extern isr_handler
+extern irq_handler
 
 ; eccezioni che non pushano l'error code
 ; lo zero finto non serve a niente se non a occupare lo spazio
@@ -25,6 +26,15 @@ extern isr_handler
         push %1
 
         jmp isr_common_stub
+%endmacro
+
+%macro IRQ 2
+    global irq%1
+    irq%1:
+        push 0
+        push %2
+
+        jmp irq_common_stub
 %endmacro
 
 ; 8 10 11 12 13 14 17 sono le uniche con error code
@@ -61,6 +71,22 @@ ISR_NOERRCODE 29
 ISR_NOERRCODE 30
 ISR_NOERRCODE 31
 
+IRQ 0, 32
+IRQ 1, 33
+IRQ 2, 34
+IRQ 3, 35
+IRQ 4, 36
+IRQ 5, 37
+IRQ 6, 38
+IRQ 7, 39
+IRQ 8, 40
+IRQ 9, 41
+IRQ 10, 42
+IRQ 11, 43
+IRQ 12, 44
+IRQ 13, 45
+IRQ 14, 46
+IRQ 15, 47
 
 
 ; punto di arrivo comune
@@ -80,6 +106,39 @@ isr_common_stub:
     push esp
 
     call isr_handler
+
+    add esp, 4
+    ; rimetto i valori in ds, es, fs, gs
+    pop eax
+    mov ds, eax
+    mov es, eax
+    mov fs, eax
+    mov gs, eax
+    ; inverso di pusha
+    popa
+
+    add esp, 8
+    ; ret non basterebbe, non ripristina né cs né eflags
+    ; e senza eflags if resterebbe spento per sempre
+    iret
+
+; punto di arrivo comune
+irq_common_stub:
+    ; pusha eax, ecx, edx, ebx, esp, ebp, esi, edi
+    pusha
+    ; salva ds, passando per eax 
+    mov ax, ds
+    push eax
+    ; carica 0x10 in ds, es, fs, gs
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    push esp
+
+    call irq_handler
 
     add esp, 4
     ; rimetto i valori in ds, es, fs, gs
