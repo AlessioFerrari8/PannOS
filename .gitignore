@@ -7,3 +7,9 @@ isodir/
 pannos.bin
 pannos.iso
 kernel/*.o
+
+# teoria/appunti, non fanno parte del kernel
+teoria/
+
+# log di test
+serial.log
