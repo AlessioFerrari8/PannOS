@@ -1,30 +1,25 @@
 # PannOS
 
-Toy OS kernel bare-metal per x86 (i686, 32 bit), scritto in C con il minimo
-indispensabile di assembly. Il nome viene da **Pannone**, il paese dove abita l'autore,
-più "OS". Progetto per [Stardance](https://hackclub.com) (Hack Club), nato per imparare
-come funziona davvero una macchina, un pezzo alla volta.
+Toy OS kernel bare-metal for x86 (i686, 32 bit), written in C with minimum of assembly. The name comes from **Pannone**, which is the village I come from (200 inhabitants), with "OS". 
 
 ![PannOS in QEMU](assets/screenshot.png)
 
-## Cosa c'è (v0.1.0)
+## Features (v0.1.0)
 
-- Boot con **Multiboot2** + GRUB
+- Boot with **Multiboot2** + GRUB
 - Driver **VGA** text mode (scroll, backspace)
 - **GDT** flat
-- **IDT**, eccezioni CPU 0-31 con stub in assembly e handler in C
-- **PIC 8259** rimappato, 16 IRQ hardware con EOI
-- **PIT 8253** a 100 Hz con contatore di tick, uptime stampato ogni secondo
-- Tastiera **PS/2** (IRQ1, scancode set 1, layout US, shift)
-- Porta **seriale** COM1: tutto quello che va a schermo esce anche lì
+- **IDT**, exceptions CPU 0-31 with stub in assembly and handler in C
+- **PIC 8259** remapped, 16 IRQ hardware with EOI
+- **PIT 8253** a 100 Hz with a tick counter, uptime printed each second
+- Board **PS/2** (IRQ1, scancode set 1, layout US, shift)
+- Serial **port** COM1: everything that appears on the screen is also displayed there
 
-Un'eccezione diversa dal breakpoint (`int 3`) è considerata fatale: il kernel stampa il
-numero e si ferma, invece di rieseguire all'infinito l'istruzione che ha fallito.
+An exception other than a breakpoint (`int 3`) is considered fatal: the kernel prints the number and halts, instead of re-executing the failed instruction infinitely.
 
-## Compilare
+## How to compile
 
-Serve un cross-compiler `i686-elf-gcc`. Lo script lo compila da sorgente (binutils 2.41,
-gcc 13.2.0, ci mette un po') e installa in `~/opt/cross`:
+You'll need a cross-compiler `i686-elf-gcc`. The script compiles from the source (binutils 2.41, gcc 13.2.0, it's a bit slow) and installs in `~/opt/cross`:
 
 ```bash
 sudo apt install build-essential nasm xorriso grub-pc-bin qemu-system-x86 \
@@ -34,35 +29,30 @@ export PATH="$HOME/opt/cross/bin:$PATH"
 make
 ```
 
-## Avviare
+## How to start
 
 ```bash
-make run            # finestra QEMU
-make run-headless   # senza finestra, output sul terminale via seriale
+make run            # QEMU window
+make run-headless   # without window, output on terminal via serial
 ```
 
-Oppure, con l'ISO già pronta dalla pagina delle release:
+You can also use the ISO from the release:
 
 ```bash
 qemu-system-i386 -cdrom pannos.iso
 ```
 
-## Limiti noti
+## Limits
 
-- Solo 32 bit.
-- Provato solo su QEMU, non su hardware vero.
-- Nessuna gestione della memoria, nessun processo, nessun user mode: oggi il kernel
-  gira, conta il tempo e legge la tastiera.
+- Only 32 bit.
+- Tried only on QEMU, non on real hardware.
+- No memory managment, no processes, no user mode: today, the kernel runs, keeps time, and reads the keyboard
 
 ## Roadmap
 
-5. Memory management: physical memory manager sulla memory map Multiboot2, poi paging
+5. Memory management: physical memory manager on memory map Multiboot2, then paging
 6. Kernel heap (`kmalloc`/`kfree`)
 7. Multitasking: context switch e scheduler round-robin
 8. User mode e syscall (TSS, ring 3)
-9. Filesystem minimo (initrd), loader ELF, shell in user mode
-10. Stretch: x86_64, SMP, framebuffer VBE, rete
-
-## Licenza
-
-MIT, vedi [LICENSE](LICENSE).
+9. Minimum filesystem (initrd), loader ELF, shell in user mode
+10. Stretch: x86_64, SMP, framebuffer VBE, net
