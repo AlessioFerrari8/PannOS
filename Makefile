@@ -16,13 +16,13 @@ kernel/idt_flush.o: kernel/idt_flush.s
 kernel/isr_stubs.o: kernel/isr_stubs.s
 	nasm -f elf32 kernel/isr_stubs.s -o kernel/isr_stubs.o
 
-kernel/isr.o: kernel/isr.c kernel/isr.h kernel/pic.h kernel/vga.h
+kernel/isr.o: kernel/isr.c kernel/isr.h kernel/pic.h kernel/vga.h kernel/pit.h kernel/keyboard.h
 	$(CC) $(CFLAGS) -c kernel/isr.c -o kernel/isr.o
 
-kernel/kernel.o: kernel/kernel.c kernel/vga.h kernel/gdt.h kernel/idt.h kernel/isr.h kernel/pic.h
+kernel/kernel.o: kernel/kernel.c kernel/pit.h kernel/serial.h kernel/vga.h kernel/gdt.h kernel/idt.h kernel/isr.h kernel/pic.h
 	$(CC) $(CFLAGS) -c kernel/kernel.c -o kernel/kernel.o
 
-kernel/vga.o: kernel/vga.c kernel/vga.h
+kernel/vga.o: kernel/vga.c kernel/vga.h kernel/serial.h
 	$(CC) $(CFLAGS) -c kernel/vga.c -o kernel/vga.o
 
 kernel/gdt.o: kernel/gdt.c kernel/gdt.h
@@ -34,10 +34,20 @@ kernel/idt.o: kernel/idt.c kernel/idt.h
 kernel/pic.o: kernel/pic.c kernel/pic.h kernel/io.h
 	$(CC) $(CFLAGS) -c kernel/pic.c -o kernel/pic.o
 
+kernel/pit.o: kernel/pit.c kernel/pit.h kernel/io.h
+	$(CC) $(CFLAGS) -c kernel/pit.c -o kernel/pit.o
+
+kernel/serial.o: kernel/serial.c kernel/serial.h kernel/io.h
+	$(CC) $(CFLAGS) -c kernel/serial.c -o kernel/serial.o
+
+kernel/keyboard.o: kernel/keyboard.c kernel/keyboard.h kernel/io.h kernel/vga.h
+	$(CC) $(CFLAGS) -c kernel/keyboard.c -o kernel/keyboard.o
+
 OBJS = kernel/boot.o kernel/kernel.o kernel/vga.o \
        kernel/gdt.o kernel/gdt_flush.o \
        kernel/idt.o kernel/idt_flush.o \
-       kernel/isr.o kernel/isr_stubs.o kernel/pic.o
+       kernel/isr.o kernel/isr_stubs.o kernel/pic.o \
+       kernel/pit.o kernel/serial.o kernel/keyboard.o
 
 pannos.bin: $(OBJS) kernel/linker.ld
 	$(CC) -T kernel/linker.ld -o pannos.bin $(LDFLAGS) $(OBJS) -lgcc
@@ -50,6 +60,11 @@ pannos.iso: pannos.bin grub.cfg
 
 run: pannos.iso
 	qemu-system-i386 -cdrom pannos.iso
+
+run-headless: pannos.iso
+	qemu-system-i386 -cdrom pannos.iso -display none -serial stdio -no-reboot
+
+.PHONY: all run run-headless clean
 
 clean:
 	rm -rf kernel/*.o pannos.bin pannos.iso isodir
