@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "vga.h"
+#include "serial.h"
 
 // dichiarazioni delle funzioni, così vengono trovate subito
 static void new_line(void);
@@ -61,10 +62,22 @@ void vga_init(void) {
  * @brief Stampa un carattere alla posizione corrente e avanza il cursore
  * @param c carattere da stampare; '\n' manda a capo senza stampare nulla
  *
- * A fine riga va a capo da sola, a fine schermo fa scrollare. L'unica sequenza
- * di escape gestita è \n
+ * A fine riga va a capo da sola, a fine schermo fa scrollare. Le sequenze
+ * di escape gestite sono \n e \b
  */
 void vga_putchar(unsigned char c) {
+    // ogni carattere va anche sulla seriale, cosi' make run-headless vede l'output
+    serial_putchar((char) c);
+
+    // backspace: indietro di una cella e la svuota (non va a capo sulla riga sopra)
+    if (c == '\b') {
+        if (current_col > 0) {
+            current_col--;
+            buffer[current_row * width + current_col] = compose_cell(' ', current_color);
+        }
+        return;
+    }
+
     // caso speciale
     if (c == '\n') {
         new_line();
